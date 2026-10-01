@@ -1,30 +1,26 @@
-
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Post,
-  Request,
-  UseGuards
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from './auth.guard.js';
 import { AuthService } from './auth.service.js';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+	constructor(private readonly authService: AuthService) {}
 
-  @HttpCode(HttpStatus.OK)
-  @Post('login')
-  signIn(@Body() signInDto: Record<string, any>) {
-    return this.authService.signIn(signInDto.username, signInDto.password);
-  }
+	@HttpCode(HttpStatus.OK)
+	@Post('login')
+	signIn(@Body() signInDto: Record<string, any>) {
+		return this.authService.signIn(signInDto.username, signInDto.password);
+	}
 
-  @UseGuards(AuthGuard)
-  @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
-  }
+	@UseGuards(AuthGuard)
+	@Get('profile')
+	getProfile(@Request() req) {
+		return req.user;
+	}
+
+	// @UseGuards(LocalAuthGuard)
+	@Post('auth/logout')
+	async logout(@Request() req: any) {
+		await new Promise<void>((resolve, reject) => req.logout((err: any) => (err ? reject(err) : resolve())));
+	}
 }
