@@ -7,10 +7,12 @@ import { jwtConstants } from './constants';
 import { LocalStrategy } from './local.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
+import { OtpModule } from '../otp/otp.module';
 
 @Module({
 	imports: [
 		UsersModule,
+		OtpModule,
 		JwtModule.register({
 			global: true,
 			secret: jwtConstants.secret,

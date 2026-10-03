@@ -5,12 +5,15 @@ import { AuthService } from './auth.service.js';
 import { UsersService } from '../users/users.service.js';
 import { CreateUserDto } from '../users/dto/create-user.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { CreateOtpDto } from 'src/otp/dto/create-otp.dto.js';
+import { OtpService } from 'src/otp/otp.service.js';
 
 @Controller('auth')
 export class AuthController {
 	constructor(
 		private readonly authService: AuthService,
 		private readonly usersService: UsersService,
+		private readonly otpService: OtpService,
 	) {}
 
 	@HttpCode(HttpStatus.OK)
@@ -27,13 +30,19 @@ export class AuthController {
 
 	@UseGuards(JwtAuthGuard)
 	@Get('profile')
-	getProfile(@Request() req) {
-		return req.user;
+	async getProfile(@Request() CreateUserDto: any) {
+		return this.usersService.findOneByEmail(CreateUserDto.user.email);
 	}
 
 	// @UseGuards(LocalAuthGuard)
 	@Post('auth/logout')
 	async logout(@Request() req: any) {
 		await new Promise<void>((resolve, reject) => req.logout((err: any) => (err ? reject(err) : resolve())));
+	}
+
+	@HttpCode(HttpStatus.OK)
+	@Post('verify')
+	otpVerify(@Body() otpDto: CreateOtpDto) {
+		return this.otpService.verify(otpDto.code, otpDto.userid);
 	}
 }
