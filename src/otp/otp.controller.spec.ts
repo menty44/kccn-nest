@@ -8,7 +8,7 @@ describe('OtpController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OtpController],
-      providers: [OtpService],
+      providers: [{ provide: OtpService, useValue: {} }],
     }).compile();
 
     controller = module.get<OtpController>(OtpController);

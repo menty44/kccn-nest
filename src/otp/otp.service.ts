@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateOtpDto } from './dto/create-otp.dto';
 import { UpdateOtpDto } from './dto/update-otp.dto';
 import { Otp } from './entities/otp.entity';
-import { Repository } from 'typeorm/browser/repository/Repository.js';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -41,7 +41,8 @@ export class OtpService {
 		await this.otpRepository.delete(id);
 	}
 
-	verify(code: string, userid: number): Promise<Otp | null> {
-		return this.otpRepository.findOneBy({ id: userid, code });
+	async verify(code: string, userid: number): Promise<{ status: boolean }> {
+		const otp = await this.otpRepository.findOneBy({ id: userid, code });
+		return otp ? { status: true } : { status: false };
 	}
 }

@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { OtpService } from './otp.service';
 import { OtpController } from './otp.controller';
-// import { AuthModule } from '../auth/auth.module';
+import { Otp } from './entities/otp.entity';
 
 @Module({
+	imports: [TypeOrmModule.forFeature([Otp])],
 	controllers: [OtpController],
 	providers: [OtpService],
-	// imports: [AuthModule],
+	exports: [OtpService],
 })
 export class OtpModule {}

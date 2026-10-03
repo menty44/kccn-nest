@@ -38,10 +38,27 @@ jest.mock(
 	{ virtual: true },
 );
 
+jest.mock(
+	'../otp/dto/create-otp.dto.js',
+	() => ({
+		CreateOtpDto: class CreateOtpDto {},
+	}),
+	{ virtual: true },
+);
+
+jest.mock(
+	'../otp/otp.service.js',
+	() => ({
+		OtpService: class OtpService {},
+	}),
+	{ virtual: true },
+);
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service.js';
 import { UsersService } from '../users/users.service.js';
+import { OtpService } from '../otp/otp.service.js';
 
 describe('AuthController', () => {
 	let controller: AuthController;
@@ -52,6 +69,7 @@ describe('AuthController', () => {
 			providers: [
 				{ provide: AuthService, useValue: {} },
 				{ provide: UsersService, useValue: {} },
+				{ provide: OtpService, useValue: {} },
 			],
 		}).compile();
 

@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { HealthModule } from './health/health.module';
 import { User } from './users/entities/user.entity';
 import { OtpModule } from './otp/otp.module';
+import { Otp } from './otp/entities/otp.entity';
 
 @Module({
 	imports: [
@@ -18,7 +19,7 @@ import { OtpModule } from './otp/otp.module';
 			username: 'postgres',
 			password: 'password',
 			database: 'kccn_backend',
-			entities: [User],
+			entities: [User, Otp],
 			synchronize: true,
 		}),
 		AuthModule,
