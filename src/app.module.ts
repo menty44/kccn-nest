@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { User } from './users/entities/user.entity';
 import { OtpModule } from './otp/otp.module';
 import { Otp } from './otp/entities/otp.entity';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
 	imports: [
@@ -26,6 +27,7 @@ import { Otp } from './otp/entities/otp.entity';
 		UsersModule,
 		HealthModule,
 		OtpModule,
+		NotificationModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
