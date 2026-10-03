@@ -25,7 +25,17 @@ export class UsersService {
 		return this.usersRepository.findOneBy({ email });
 	}
 
-	async create(createUserDto: CreateUserDto): Promise<User> {
+	findOneByPhone(phone: string): Promise<User | null> {
+		return this.usersRepository.findOneBy({ phone });
+	}
+
+	async create(createUserDto: CreateUserDto): Promise<any> {
+		if (await this.findOneByEmail(createUserDto.email)) {
+			return { error: 'Email already exists' };
+		}
+		if (await this.findOneByPhone(createUserDto.phone)) {
+			return { error: 'Phone already exists' };
+		}
 		const user = this.usersRepository.create({
 			...createUserDto,
 			password: await bcrypt.hash(createUserDto.password, 10),

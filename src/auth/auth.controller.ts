@@ -24,7 +24,7 @@ export class AuthController {
 
 	@HttpCode(HttpStatus.OK)
 	@Post('register')
-	register(@Body() createUserDto: CreateUserDto) {
+	register(@Body() createUserDto: any) {
 		return this.usersService.create(createUserDto);
 	}
 
