@@ -5,8 +5,8 @@ import { AuthService } from './auth.service.js';
 import { UsersService } from '../users/users.service.js';
 import { CreateUserDto } from '../users/dto/create-user.dto.js';
 import { LoginDto } from './dto/login.dto.js';
-import { CreateOtpDto } from 'src/otp/dto/create-otp.dto.js';
-import { OtpService } from 'src/otp/otp.service.js';
+import { CreateOtpDto } from '../otp/dto/create-otp.dto.js';
+import { OtpService } from '../otp/otp.service.js';
 
 @Controller('auth')
 export class AuthController {
