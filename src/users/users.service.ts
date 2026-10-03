@@ -113,11 +113,11 @@ export class UsersService {
 			});
 		}
 
-		const newPassword = randomInt(100_000, 1_000_000).toString();
-		user.password = await bcrypt.hash(newPassword, 10);
+		// const newPassword = randomInt(100_000, 1_000_000).toString();
+		// user.password = await bcrypt.hash(newPassword, 10);
 
-		await this.usersRepository.save(user);
+		// await this.usersRepository.save(user);
 
-		return { email: user.email, newPassword };
+		return { message: 'Password reset successful.' };
 	}
 }
