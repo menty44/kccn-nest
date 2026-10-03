@@ -3,7 +3,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards }
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { AuthService } from './auth.service.js';
 import { UsersService } from '../users/users.service.js';
-import { CreateUserDto } from '../users/dto/create-user.dto.js';
+// import { CreateUserDto } from '../users/dto/create-user.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { CreateOtpDto } from '../otp/dto/create-otp.dto.js';
 import { OtpService } from '../otp/otp.service.js';
