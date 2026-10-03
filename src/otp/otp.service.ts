@@ -42,7 +42,8 @@ export class OtpService {
 	}
 
 	async verify(code: string, userid: number): Promise<{ status: boolean }> {
-		const otp = await this.otpRepository.findOneBy({ id: userid, code });
+		const otp = await this.otpRepository.findOneBy({ userid, code });
+		console.log(otp);
 		return otp ? { status: true } : { status: false };
 	}
 }

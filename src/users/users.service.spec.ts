@@ -28,7 +28,8 @@ describe('UsersService', () => {
 		jest.clearAllMocks();
 		usersRepository.manager.transaction.mockImplementation(async (callback) =>
 			callback({
-				getRepository: (entity: typeof User | typeof Otp) => (entity === User ? usersRepository : otpRepository),
+				getRepository: (entity: typeof User | typeof Otp) =>
+					entity === User ? usersRepository : otpRepository,
 			}),
 		);
 		usersRepository.findOneBy.mockResolvedValue(null);
