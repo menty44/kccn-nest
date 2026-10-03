@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { QueryFailedError, Repository } from 'typeorm';
@@ -102,5 +102,22 @@ export class UsersService {
 
 	async remove(id: number): Promise<void> {
 		await this.usersRepository.delete(id);
+	}
+
+	async resetPassword(email: string): Promise<any> {
+		const user = await this.usersRepository.findOneBy({ email });
+		if (!user) {
+			throw new NotFoundException({
+				code: 'USER_NOT_FOUND',
+				message: 'No account found with this email.',
+			});
+		}
+
+		const newPassword = randomInt(100_000, 1_000_000).toString();
+		user.password = await bcrypt.hash(newPassword, 10);
+
+		await this.usersRepository.save(user);
+
+		return { email: user.email, newPassword };
 	}
 }
