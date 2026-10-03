@@ -1,24 +1,51 @@
 import { Injectable } from '@nestjs/common';
-
-// This should be a real class/interface representing a user entity
-export type User = any;
+import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcryptjs';
+import { Repository } from 'typeorm';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-	private readonly users = [
-		{
-			userId: 1,
-			username: 'john',
-			password: 'changeme',
-		},
-		{
-			userId: 2,
-			username: 'maria',
-			password: 'guess',
-		},
-	];
+	constructor(
+		@InjectRepository(User)
+		private usersRepository: Repository<User>,
+	) {}
 
-	async findOne(username: string): Promise<User | undefined> {
-		return this.users.find((user) => user.username === username);
+	findAll(): Promise<User[]> {
+		return this.usersRepository.find();
+	}
+
+	findOne(id: number): Promise<User | null> {
+		return this.usersRepository.findOneBy({ id });
+	}
+
+	findOneByEmail(email: string): Promise<User | null> {
+		return this.usersRepository.findOneBy({ email });
+	}
+
+	async create(createUserDto: CreateUserDto): Promise<User> {
+		const user = this.usersRepository.create({
+			...createUserDto,
+			password: await bcrypt.hash(createUserDto.password, 10),
+		} as unknown as User);
+
+		return this.usersRepository.save(user);
+	}
+
+	async update(id: number, updateUserDto: UpdateUserDto): Promise<User | null> {
+		const password = (updateUserDto as Partial<CreateUserDto>).password;
+		const user = await this.usersRepository.preload({
+			id,
+			...updateUserDto,
+			...(password === undefined ? {} : { password: await bcrypt.hash(password, 10) }),
+		} as User);
+
+		return user ? this.usersRepository.save(user) : null;
+	}
+
+	async remove(id: number): Promise<void> {
+		await this.usersRepository.delete(id);
 	}
 }

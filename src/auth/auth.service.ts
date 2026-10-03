@@ -1,6 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '../users/entities/user.entity';
+
+type AuthenticatedUser = Omit<User, 'password'>;
 
 @Injectable()
 export class AuthService {
@@ -9,32 +13,41 @@ export class AuthService {
 		private jwtService: JwtService,
 	) {}
 
-	async signIn(username: string, pass: string): Promise<{ access_token: string }> {
-		const user = await this.usersService.findOne(username);
-		if (user?.password !== pass) {
-			throw new UnauthorizedException();
-		}
-		const payload = { sub: user.userId, username: user.username };
+	async signIn(email: string, pass: string): Promise<{ access_token: string }> {
+		const user = await this.validateCredentials(email, pass);
+		const payload = { sub: user.id, email: user.email };
 		return {
-			// 💡 Here the JWT secret key that's used for signing the payload
-			// is the key that was passed in the JwtModule
 			access_token: await this.jwtService.signAsync(payload),
 		};
 	}
 
-	async validateUser(username: string, pass: string): Promise<any> {
-		const user = await this.usersService.findOne(username);
-		if (user && user.password === pass) {
-			const { password, ...result } = user;
-			return result;
-		}
-		return null;
+	async validateUser(email: string, pass: string): Promise<AuthenticatedUser> {
+		return this.excludePassword(await this.validateCredentials(email, pass));
 	}
 
-	async login(user: any) {
-		const payload = { username: user.username, sub: user.userId };
+	async login(user: AuthenticatedUser): Promise<{ access_token: string }> {
+		const payload = { email: user.email, sub: user.id };
 		return {
-			access_token: this.jwtService.sign(payload),
+			access_token: await this.jwtService.signAsync(payload),
 		};
+	}
+
+	private async validateCredentials(email: string, pass: string): Promise<User> {
+		if (typeof email !== 'string' || typeof pass !== 'string' || !email || !pass) {
+			throw new UnauthorizedException('Invalid credentials.');
+		}
+
+		const user = await this.usersService.findOneByEmail(email);
+		if (!user || !user.isActive || user.isBlocked || !(await bcrypt.compare(pass, user.password))) {
+			throw new UnauthorizedException('Invalid credentials.');
+		}
+
+		return user;
+	}
+
+	private excludePassword(user: User): AuthenticatedUser {
+		const authenticatedUser = { ...user };
+		delete authenticatedUser.password;
+		return authenticatedUser;
 	}
 }

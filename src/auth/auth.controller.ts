@@ -2,15 +2,29 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards }
 // import { AuthGuard } from './auth.guard.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { AuthService } from './auth.service.js';
+import { UsersService } from '../users/users.service.js';
+import { log } from 'console';
+import { CreateUserDto } from '../users/dto/create-user.dto.js';
 
 @Controller('auth')
 export class AuthController {
-	constructor(private readonly authService: AuthService) {}
+	constructor(
+		private readonly authService: AuthService,
+		private readonly usersService: UsersService,
+	) {}
 
 	@HttpCode(HttpStatus.OK)
 	@Post('login')
 	signIn(@Body() signInDto: Record<string, any>) {
+		log(signInDto);
 		return this.authService.signIn(signInDto.username, signInDto.password);
+	}
+
+	@HttpCode(HttpStatus.OK)
+	@Post('register')
+	register(@Body() createUserDto: CreateUserDto) {
+		log(createUserDto);
+		return this.usersService.create(createUserDto);
 	}
 
 	@UseGuards(JwtAuthGuard)
