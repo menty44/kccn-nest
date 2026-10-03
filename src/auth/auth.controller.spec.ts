@@ -14,9 +14,34 @@ jest.mock(
 	{ virtual: true },
 );
 
+jest.mock(
+	'../users/users.service.js',
+	() => ({
+		UsersService: class UsersService {},
+	}),
+	{ virtual: true },
+);
+
+jest.mock(
+	'../users/dto/create-user.dto.js',
+	() => ({
+		CreateUserDto: class CreateUserDto {},
+	}),
+	{ virtual: true },
+);
+
+jest.mock(
+	'./dto/login.dto.js',
+	() => ({
+		LoginDto: class LoginDto {},
+	}),
+	{ virtual: true },
+);
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service.js';
+import { UsersService } from '../users/users.service.js';
 
 describe('AuthController', () => {
 	let controller: AuthController;
@@ -24,7 +49,10 @@ describe('AuthController', () => {
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
 			controllers: [AuthController],
-			providers: [{ provide: AuthService, useValue: {} }],
+			providers: [
+				{ provide: AuthService, useValue: {} },
+				{ provide: UsersService, useValue: {} },
+			],
 		}).compile();
 
 		controller = module.get<AuthController>(AuthController);

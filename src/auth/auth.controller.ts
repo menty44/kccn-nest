@@ -3,8 +3,8 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards }
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { AuthService } from './auth.service.js';
 import { UsersService } from '../users/users.service.js';
-import { log } from 'console';
 import { CreateUserDto } from '../users/dto/create-user.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 
 @Controller('auth')
 export class AuthController {
@@ -15,15 +15,13 @@ export class AuthController {
 
 	@HttpCode(HttpStatus.OK)
 	@Post('login')
-	signIn(@Body() signInDto: Record<string, any>) {
-		log(signInDto);
-		return this.authService.signIn(signInDto.username, signInDto.password);
+	signIn(@Body() signInDto: LoginDto) {
+		return this.authService.signIn(signInDto.email, signInDto.password);
 	}
 
 	@HttpCode(HttpStatus.OK)
 	@Post('register')
 	register(@Body() createUserDto: CreateUserDto) {
-		log(createUserDto);
 		return this.usersService.create(createUserDto);
 	}
 

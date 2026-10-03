@@ -35,8 +35,8 @@ describe('UsersService', () => {
 
 	it('hashes a password before creating a user', async () => {
 		const createUserDto: CreateUserDto = {
-			firstname: 'Jane',
-			lastname: 'Doe',
+			firstName: 'Jane',
+			lastName: 'Doe',
 			email: 'jane@example.com',
 			phone: '123456789',
 			gender: 'female',
