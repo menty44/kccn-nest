@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { CommonutilsService } from '../commonutils/commonutils.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { QueryFailedError, Repository } from 'typeorm';
@@ -15,6 +16,7 @@ export class UsersService {
 		private usersRepository: Repository<User>,
 		@InjectRepository(Otp)
 		private otpRepository: Repository<Otp>,
+		private common: CommonutilsService,
 	) {}
 
 	findAll(): Promise<User[]> {
@@ -112,7 +114,7 @@ export class UsersService {
 				message: 'No account found with this email.',
 			});
 		}
-
+		this.common.resetPassword(randomInt(100_000, 1_000_000).toString(), email);
 		// const newPassword = randomInt(100_000, 1_000_000).toString();
 		// user.password = await bcrypt.hash(newPassword, 10);
 
