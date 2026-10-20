@@ -97,12 +97,32 @@ export class ContentController {
 
 	@Get('sermons/:id')
 	async sermon(@Param('id') id: string): Promise<Payload> {
-		return { data: await this.resources.get('sermons', id) };
+		const sermon = await this.resources.get('sermons', id);
+		return sermon.status === 'published' ? { data: sermon } : { data: null };
 	}
 
 	@Get('sermons')
-	async sermons(@Query('limit') limit?: string, @Query('cursor') cursor?: string): Promise<Payload> {
-		return this.collection('sermons', limit, cursor);
+	async sermons(@Query() query: Record<string, string | undefined>): Promise<Payload> {
+		const page = await this.resources.list('sermons', this.limit(query.limit), query.cursor);
+		const terms = query.q?.trim().toLocaleLowerCase();
+		const filtered = page.data.filter((sermon) => {
+			if (sermon.status !== 'published') return false;
+			if (query.type && sermon.type !== query.type) return false;
+			if (query.series && sermon.series_id !== query.series) return false;
+			if (query.speaker && sermon.speaker_id !== query.speaker) return false;
+			if (query.topic && (!Array.isArray(sermon.topics) || !sermon.topics.includes(query.topic))) return false;
+			if (query.date_from && String(sermon.published_at ?? '') < query.date_from) return false;
+			if (query.date_to && String(sermon.published_at ?? '') > query.date_to) return false;
+			return (
+				!terms ||
+				[sermon.title, sermon.description, sermon.speaker_name].some((value) =>
+					String(value ?? '')
+						.toLowerCase()
+						.includes(terms),
+				)
+			);
+		});
+		return { data: filtered, meta: { next_cursor: page.nextCursor, has_more: page.hasMore } };
 	}
 
 	@Get('speakers')
