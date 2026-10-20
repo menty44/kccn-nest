@@ -93,10 +93,13 @@ describe('AuthService', () => {
 
 		await expect(service.signIn(user.email, password)).resolves.toEqual({
 			access_token: 'signed-token',
+			expires_in: 900,
+			token_type: 'Bearer',
 		});
 		expect(jwtService.signAsync).toHaveBeenCalledWith({
 			sub: user.id,
 			email: user.email,
+			roles: ['member'],
 		});
 	});
 });

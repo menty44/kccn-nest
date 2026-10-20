@@ -7,6 +7,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { Otp } from '../otp/entities/otp.entity';
+import { CommonutilsService } from '../commonutils/commonutils.service';
 
 describe('UsersService', () => {
 	let service: UsersService;
@@ -45,6 +46,10 @@ describe('UsersService', () => {
 					provide: getRepositoryToken(Otp),
 					useValue: otpRepository,
 				},
+				{
+					provide: CommonutilsService,
+					useValue: { resetPassword: jest.fn() },
+				},
 			],
 		}).compile();
 
@@ -71,9 +76,11 @@ describe('UsersService', () => {
 		otpRepository.save.mockImplementation(async (otp) => otp);
 
 		const user = await service.create(createUserDto);
+		const savedUser = usersRepository.save.mock.calls[0][0];
 
-		expect(user.password).not.toBe(createUserDto.password);
-		await expect(bcrypt.compare(createUserDto.password, user.password)).resolves.toBe(true);
+		expect(savedUser.password).not.toBe(createUserDto.password);
+		await expect(bcrypt.compare(createUserDto.password, savedUser.password)).resolves.toBe(true);
+		expect(user).not.toHaveProperty('password');
 		expect(otpRepository.save).toHaveBeenCalledWith(
 			expect.objectContaining({ userid: user.id, code: expect.stringMatching(/^\d{6}$/) }),
 		);

@@ -13,11 +13,16 @@ export class AuthService {
 		private jwtService: JwtService,
 	) {}
 
-	async signIn(email: string, pass: string): Promise<{ access_token: string }> {
+	async signIn(
+		email: string,
+		pass: string,
+	): Promise<{ access_token: string; expires_in: number; token_type: string }> {
 		const user = await this.validateCredentials(email, pass);
-		const payload = { sub: user.id, email: user.email };
+		const payload = { sub: user.id, email: user.email, roles: user.isAdmin ? ['admin'] : ['member'] };
 		return {
 			access_token: await this.jwtService.signAsync(payload),
+			expires_in: 900,
+			token_type: 'Bearer',
 		};
 	}
 
@@ -25,10 +30,12 @@ export class AuthService {
 		return this.excludePassword(await this.validateCredentials(email, pass));
 	}
 
-	async login(user: AuthenticatedUser): Promise<{ access_token: string }> {
-		const payload = { email: user.email, sub: user.id };
+	async login(user: AuthenticatedUser): Promise<{ access_token: string; expires_in: number; token_type: string }> {
+		const payload = { email: user.email, sub: user.id, roles: user.isAdmin ? ['admin'] : ['member'] };
 		return {
 			access_token: await this.jwtService.signAsync(payload),
+			expires_in: 900,
+			token_type: 'Bearer',
 		};
 	}
 

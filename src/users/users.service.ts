@@ -35,7 +35,7 @@ export class UsersService {
 		return this.usersRepository.findOneBy({ phone });
 	}
 
-	async create(createUserDto: CreateUserDto): Promise<User> {
+	async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
 		try {
 			return await this.usersRepository.manager.transaction(async (manager) => {
 				const usersRepository = manager.getRepository(User);
@@ -73,7 +73,7 @@ export class UsersService {
 					} as Otp),
 				);
 
-				return user;
+				return this.excludePassword(user);
 			});
 		} catch (error) {
 			if (this.isUniqueConstraintViolation(error)) {
@@ -85,6 +85,12 @@ export class UsersService {
 
 			throw error;
 		}
+	}
+
+	private excludePassword(user: User): Omit<User, 'password'> {
+		const safeUser = { ...user };
+		delete safeUser.password;
+		return safeUser;
 	}
 
 	private isUniqueConstraintViolation(error: unknown): error is QueryFailedError {

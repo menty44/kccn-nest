@@ -16,7 +16,7 @@ import { OtpModule } from '../otp/otp.module';
 		JwtModule.register({
 			global: true,
 			secret: jwtConstants.secret,
-			signOptions: { expiresIn: '3600s' },
+			signOptions: { expiresIn: '15m' },
 		}),
 		PassportModule,
 	],

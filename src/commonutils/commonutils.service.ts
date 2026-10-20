@@ -1,5 +1,5 @@
 import { InternalServerErrorException, Injectable } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import axios from 'axios';
 import FormData from 'form-data';
 import { Resend } from 'resend';
@@ -12,7 +12,7 @@ import { MailerService } from '@nestjs-modules/mailer';
 export class CommonutilsService {
 	constructor(private mailerService: MailerService) {}
 	async generateRandomInt() {
-		return uuidv4();
+		return randomUUID();
 	}
 
 	resend = new Resend(process.env.RESEND_API_KEY);

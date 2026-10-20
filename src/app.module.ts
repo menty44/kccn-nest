@@ -10,6 +10,8 @@ import { User } from './users/entities/user.entity';
 import { OtpModule } from './otp/otp.module';
 import { Otp } from './otp/entities/otp.entity';
 import { NotificationModule } from './notification/notification.module';
+import { PlatformModule } from './platform/platform.module';
+import { ApiResource } from './platform/entities/api-resource.entity';
 
 @Module({
 	imports: [
@@ -20,7 +22,7 @@ import { NotificationModule } from './notification/notification.module';
 			username: 'postgres',
 			password: 'password',
 			database: 'kccn_backend',
-			entities: [User, Otp],
+			entities: [User, Otp, ApiResource],
 			synchronize: true,
 		}),
 		AuthModule,
@@ -28,6 +30,7 @@ import { NotificationModule } from './notification/notification.module';
 		HealthModule,
 		OtpModule,
 		NotificationModule,
+		PlatformModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

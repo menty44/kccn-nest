@@ -43,7 +43,11 @@ export class OtpService {
 
 	async verify(code: string, userid: number): Promise<{ status: boolean }> {
 		const otp = await this.otpRepository.findOneBy({ userid, code });
-		console.log(otp);
-		return otp ? { status: true } : { status: false };
+		if (!otp || otp.created_at.getTime() + 5 * 60 * 1000 < Date.now()) {
+			return { status: false };
+		}
+
+		await this.otpRepository.delete(otp.id);
+		return { status: true };
 	}
 }
