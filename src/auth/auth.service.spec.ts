@@ -5,6 +5,8 @@ import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { AuthService } from './auth.service';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Session } from './entities/session.entity';
 
 describe('AuthService', () => {
 	let service: AuthService;
@@ -14,6 +16,7 @@ describe('AuthService', () => {
 	const jwtService = {
 		signAsync: jest.fn(),
 	};
+	const sessions = { create: jest.fn(), save: jest.fn(), findOneBy: jest.fn(), find: jest.fn() };
 
 	const createUser = (overrides: Partial<User> = {}): User =>
 		({
@@ -33,6 +36,7 @@ describe('AuthService', () => {
 				AuthService,
 				{ provide: UsersService, useValue: usersService },
 				{ provide: JwtService, useValue: jwtService },
+				{ provide: getRepositoryToken(Session), useValue: sessions },
 			],
 		}).compile();
 
@@ -90,9 +94,12 @@ describe('AuthService', () => {
 		const user = createUser({ password: await bcrypt.hash(password, 10) });
 		usersService.findOneByEmail.mockResolvedValue(user);
 		jwtService.signAsync.mockResolvedValue('signed-token');
+		sessions.create.mockImplementation((session) => session);
+		sessions.save.mockResolvedValue({ id: '00000000-0000-7000-8000-000000000000' });
 
 		await expect(service.signIn(user.email, password)).resolves.toEqual({
 			access_token: 'signed-token',
+			refresh_token: expect.any(String),
 			expires_in: 900,
 			token_type: 'Bearer',
 		});
@@ -100,6 +107,7 @@ describe('AuthService', () => {
 			sub: user.id,
 			email: user.email,
 			roles: ['member'],
+			sid: '00000000-0000-7000-8000-000000000000',
 		});
 	});
 });

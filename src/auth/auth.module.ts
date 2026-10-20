@@ -8,9 +8,12 @@ import { LocalStrategy } from './local.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { OtpModule } from '../otp/otp.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Session } from './entities/session.entity';
 
 @Module({
 	imports: [
+		TypeOrmModule.forFeature([Session]),
 		UsersModule,
 		OtpModule,
 		JwtModule.register({

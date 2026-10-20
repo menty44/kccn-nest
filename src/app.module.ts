@@ -15,6 +15,18 @@ import { ApiResource } from './platform/entities/api-resource.entity';
 import { ContentModule } from './content/content.module';
 import { ProfileModule } from './profile/profile.module';
 import { OperationsModule } from './operations/operations.module';
+import { Session } from './auth/entities/session.entity';
+import { SecurityModule } from './security/security.module';
+import {
+	AuditLog,
+	Job,
+	Permission,
+	RateLimitBucket,
+	Role,
+	RolePermission,
+	UserPermissionOverride,
+	UserRole,
+} from './security/entities/security.entity';
 
 @Module({
 	imports: [
@@ -25,7 +37,20 @@ import { OperationsModule } from './operations/operations.module';
 			username: 'postgres',
 			password: 'password',
 			database: 'kccn_backend',
-			entities: [User, Otp, ApiResource],
+			entities: [
+				User,
+				Otp,
+				ApiResource,
+				Session,
+				Role,
+				Permission,
+				RolePermission,
+				UserRole,
+				UserPermissionOverride,
+				AuditLog,
+				RateLimitBucket,
+				Job,
+			],
 			synchronize: true,
 		}),
 		AuthModule,
@@ -36,6 +61,7 @@ import { OperationsModule } from './operations/operations.module';
 		ContentModule,
 		ProfileModule,
 		OperationsModule,
+		SecurityModule,
 		PlatformModule,
 	],
 	controllers: [AppController],
