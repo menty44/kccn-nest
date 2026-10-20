@@ -12,6 +12,9 @@ import { Otp } from './otp/entities/otp.entity';
 import { NotificationModule } from './notification/notification.module';
 import { PlatformModule } from './platform/platform.module';
 import { ApiResource } from './platform/entities/api-resource.entity';
+import { ContentModule } from './content/content.module';
+import { ProfileModule } from './profile/profile.module';
+import { OperationsModule } from './operations/operations.module';
 
 @Module({
 	imports: [
@@ -30,6 +33,9 @@ import { ApiResource } from './platform/entities/api-resource.entity';
 		HealthModule,
 		OtpModule,
 		NotificationModule,
+		ContentModule,
+		ProfileModule,
+		OperationsModule,
 		PlatformModule,
 	],
 	controllers: [AppController],

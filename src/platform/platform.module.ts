@@ -9,6 +9,6 @@ import { ContractAccessGuard } from './contract-access.guard';
 	imports: [TypeOrmModule.forFeature([ApiResource])],
 	controllers: [ContractController],
 	providers: [ApiResourceService, ContractAccessGuard],
-	exports: [ApiResourceService],
+	exports: [ApiResourceService, ContractAccessGuard],
 })
 export class PlatformModule {}

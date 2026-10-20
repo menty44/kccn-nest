@@ -33,8 +33,21 @@ export class ApiResourceService {
 	}
 
 	async list(resourceType: string, limit: number, cursor?: string): Promise<ResourceList> {
+		return this.listMatching(resourceType, limit, cursor);
+	}
+
+	async listOwned(resourceType: string, ownerId: string, limit: number, cursor?: string): Promise<ResourceList> {
+		return this.listMatching(resourceType, limit, cursor, ownerId);
+	}
+
+	private async listMatching(
+		resourceType: string,
+		limit: number,
+		cursor?: string,
+		ownerId?: string,
+	): Promise<ResourceList> {
 		const resources = await this.resources.find({
-			where: { resourceType, deletedAt: null },
+			where: { resourceType, deletedAt: null, ...(ownerId ? { ownerId } : {}) },
 			order: { createdAt: 'DESC' },
 		});
 		const start = cursor ? resources.findIndex((resource) => resource.id === cursor) + 1 : 0;
