@@ -1,4 +1,4 @@
-import { InternalServerErrorException, Injectable, Optional } from '@nestjs/common';
+import { InternalServerErrorException, Injectable, Optional, ServiceUnavailableException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import axios from 'axios';
 import FormData from 'form-data';
@@ -11,6 +11,12 @@ import { MailerService } from '@nestjs-modules/mailer';
 @Injectable()
 export class CommonutilsService {
 	constructor(@Optional() private readonly mailerService?: MailerService) {}
+
+	assertOtpDeliveryConfigured(): void {
+		if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+			throw new ServiceUnavailableException('OTP email delivery is not configured.');
+		}
+	}
 	async generateRandomInt() {
 		return randomUUID();
 	}
@@ -65,6 +71,20 @@ export class CommonutilsService {
 				name: text,
 				otp,
 			},
+		});
+	}
+
+	async sendOtp(email: string, code: string): Promise<void> {
+		this.assertOtpDeliveryConfigured();
+		if (!this.mailerService) {
+			throw new ServiceUnavailableException('OTP email delivery is not configured.');
+		}
+
+		await this.mailerService.sendMail({
+			to: email,
+			from: process.env.SMTP_FROM ?? process.env.SMTP_USER,
+			subject: 'Your verification code',
+			html: `<p>Your verification code is <strong>${code}</strong>.</p><p>It expires in 5 minutes.</p>`,
 		});
 	}
 

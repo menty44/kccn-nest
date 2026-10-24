@@ -7,6 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class OtpService {
+	private static readonly TTL_MS = 5 * 60 * 1000;
+
 	constructor(
 		@InjectRepository(Otp)
 		private otpRepository: Repository<Otp>,
@@ -41,10 +43,14 @@ export class OtpService {
 		await this.otpRepository.delete(id);
 	}
 
-	async verify(code: string, userid: number): Promise<{ status: boolean }> {
+	async verify(code: string, userid: number): Promise<{ status: boolean; reason?: 'invalid' | 'expired' }> {
 		const otp = await this.otpRepository.findOneBy({ userid, code });
-		if (!otp || otp.created_at.getTime() + 5 * 60 * 1000 < Date.now()) {
-			return { status: false };
+		if (!otp) {
+			return { status: false, reason: 'invalid' };
+		}
+		if (otp.created_at.getTime() + OtpService.TTL_MS < Date.now()) {
+			await this.otpRepository.delete(otp.id);
+			return { status: false, reason: 'expired' };
 		}
 
 		await this.otpRepository.delete(otp.id);

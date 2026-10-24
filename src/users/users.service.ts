@@ -36,8 +36,9 @@ export class UsersService {
 	}
 
 	async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
+		this.common.assertOtpDeliveryConfigured();
 		try {
-			return await this.usersRepository.manager.transaction(async (manager) => {
+			const { user, otpCode } = await this.usersRepository.manager.transaction(async (manager) => {
 				const usersRepository = manager.getRepository(User);
 				const otpRepository = manager.getRepository(Otp);
 				const [existingEmail, existingPhone] = await Promise.all([
@@ -66,15 +67,18 @@ export class UsersService {
 					} as User),
 				);
 
+				const otpCode = randomInt(100_000, 1_000_000).toString();
 				await otpRepository.save(
 					otpRepository.create({
 						userid: user.id,
-						code: randomInt(100_000, 1_000_000).toString(),
+						code: otpCode,
 					} as Otp),
 				);
 
-				return this.excludePassword(user);
+				return { user: this.excludePassword(user), otpCode };
 			});
+			await this.common.sendOtp(createUserDto.email, otpCode);
+			return user;
 		} catch (error) {
 			if (this.isUniqueConstraintViolation(error)) {
 				throw new ConflictException({
@@ -85,6 +89,20 @@ export class UsersService {
 
 			throw error;
 		}
+	}
+
+	async requestVerificationOtp(email: string): Promise<{ status: 'sent' }> {
+		const user = await this.usersRepository.findOneBy({ email });
+		if (!user) {
+			return { status: 'sent' };
+		}
+
+		this.common.assertOtpDeliveryConfigured();
+		const code = randomInt(100_000, 1_000_000).toString();
+		await this.otpRepository.delete({ userid: user.id });
+		await this.otpRepository.save(this.otpRepository.create({ userid: user.id, code }));
+		await this.common.sendOtp(user.email, code);
+		return { status: 'sent' };
 	}
 
 	private excludePassword(user: User): Omit<User, 'password'> {

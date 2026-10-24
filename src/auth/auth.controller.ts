@@ -16,6 +16,8 @@ import { UsersService } from '../users/users.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { CreateOtpDto } from '../otp/dto/create-otp.dto.js';
 import { OtpService } from '../otp/otp.service.js';
+import { CreateUserDto } from '../users/dto/create-user.dto.js';
+import { RequestOtpDto } from './dto/request-otp.dto.js';
 
 @Controller('auth')
 export class AuthController {
@@ -33,7 +35,7 @@ export class AuthController {
 
 	@HttpCode(HttpStatus.OK)
 	@Post('register')
-	register(@Body() createUserDto: any) {
+	register(@Body() createUserDto: CreateUserDto) {
 		return this.usersService.create(createUserDto);
 	}
 
@@ -64,8 +66,14 @@ export class AuthController {
 	}
 
 	@HttpCode(HttpStatus.OK)
-	@Post('verify')
+	@Post(['verify', 'otp/verify'])
 	otpVerify(@Body() otpDto: CreateOtpDto) {
 		return this.otpService.verify(otpDto.code, otpDto.userid);
+	}
+
+	@HttpCode(HttpStatus.OK)
+	@Post('otp/request')
+	requestOtp(@Body() requestOtpDto: RequestOtpDto) {
+		return this.usersService.requestVerificationOtp(requestOtpDto.email);
 	}
 }

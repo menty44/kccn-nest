@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -6,6 +7,14 @@ import { ApiExceptionFilter } from './platform/api-exception.filter';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
+	const allowedOrigins = process.env.CORS_ORIGIN?.split(',')
+		.map((origin) => origin.trim())
+		.filter(Boolean);
+
+	app.enableCors({
+		origin: allowedOrigins?.length ? allowedOrigins : true,
+		credentials: true,
+	});
 	app.useGlobalPipes(
 		new ValidationPipe({
 			whitelist: true,
