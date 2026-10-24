@@ -1,4 +1,4 @@
-import { InternalServerErrorException, Injectable } from '@nestjs/common';
+import { InternalServerErrorException, Injectable, Optional } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import axios from 'axios';
 import FormData from 'form-data';
@@ -10,12 +10,10 @@ import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class CommonutilsService {
-	constructor(private mailerService: MailerService) {}
+	constructor(@Optional() private readonly mailerService?: MailerService) {}
 	async generateRandomInt() {
 		return randomUUID();
 	}
-
-	resend = new Resend(process.env.RESEND_API_KEY);
 
 	async sendText(text: string) {
 		const engine = new Liquid();
@@ -52,6 +50,10 @@ export class CommonutilsService {
 	}
 
 	async sendEmail(text: string) {
+		if (!this.mailerService) {
+			throw new InternalServerErrorException('Email delivery is not configured.');
+		}
+
 		const otp = 8383;
 
 		await this.mailerService.sendMail({
@@ -67,7 +69,12 @@ export class CommonutilsService {
 	}
 
 	async resetPassword(code: string, email: string): Promise<void> {
-		const { data, error } = await this.resend.emails.send({
+		const apiKey = process.env.RESEND_API_KEY;
+		if (!apiKey) {
+			throw new InternalServerErrorException('Password reset email delivery is not configured.');
+		}
+
+		const { data, error } = await new Resend(apiKey).emails.send({
 			from: 'onboarding@resend.dev',
 			to: email,
 			subject: 'Reset your password',

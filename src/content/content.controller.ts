@@ -1,7 +1,9 @@
 import {
 	Body,
+	BadRequestException,
 	Controller,
 	Delete,
+	ForbiddenException,
 	Get,
 	NotImplementedException,
 	Param,
@@ -15,7 +17,7 @@ import { ApiResourceService, ResourceList } from '../platform/api-resource.servi
 import { ContractAccessGuard } from '../platform/contract-access.guard';
 
 type Payload = Record<string, unknown>;
-type RequestUser = { user?: { sub: number } };
+type RequestUser = { user?: { sub: number; roles?: string[] } };
 
 @Controller()
 @UseGuards(ContractAccessGuard)
@@ -189,7 +191,17 @@ export class ContentController {
 
 	@Post('prayer-requests')
 	async createPrayerRequest(@Body() body: Payload, @Req() request: RequestUser): Promise<Payload> {
-		return { data: await this.resources.create('prayer-requests', body, this.owner(request)) };
+		if (body.visibility !== 'public' && body.visibility !== 'private') {
+			throw new BadRequestException('Prayer request visibility must be public or private.');
+		}
+		return {
+			data: await this.resources.create(
+				'prayer-requests',
+				{ ...body, prayed_count: 0 },
+				this.owner(request),
+				'pending',
+			),
+		};
 	}
 
 	@Get('prayer-wall')
@@ -200,12 +212,19 @@ export class ContentController {
 
 	@Post('prayer-wall/:id/pray')
 	async pray(@Param('id') id: string, @Req() request: RequestUser): Promise<Payload> {
+		const prayer = await this.resources.get('prayer-requests', id);
+		if (prayer.visibility !== 'public')
+			throw new ForbiddenException('Only public prayer requests can be prayed for.');
+		const prayedCount = Number(prayer.prayed_count ?? 0) + 1;
+		await this.resources.update('prayer-requests', id, { prayed_count: prayedCount });
 		return { data: await this.action('prayer-requests', id, 'pray', {}, request.user?.sub) };
 	}
 
 	@Get('prayer-requests/:id')
-	async prayerRequest(@Param('id') id: string): Promise<Payload> {
-		return { data: await this.resources.get('prayer-requests', id) };
+	async prayerRequest(@Param('id') id: string, @Req() request: RequestUser): Promise<Payload> {
+		const prayer = await this.resources.get('prayer-requests', id);
+		this.requireOwnerOrCounselor(prayer, request);
+		return { data: prayer };
 	}
 
 	@Post('prayer-requests/:id/responses')
@@ -214,16 +233,23 @@ export class ContentController {
 		@Body() body: Payload,
 		@Req() request: RequestUser,
 	): Promise<Payload> {
+		this.requireStaff(request);
 		return { data: await this.action('prayer-requests', id, 'response', body, request.user?.sub) };
 	}
 
 	@Patch('prayer-requests/:id')
-	async updatePrayerRequest(@Param('id') id: string, @Body() body: Payload): Promise<Payload> {
+	async updatePrayerRequest(
+		@Param('id') id: string,
+		@Body() body: Payload,
+		@Req() request: RequestUser,
+	): Promise<Payload> {
+		this.requireOwnerOrCounselor(await this.resources.get('prayer-requests', id), request);
 		return { data: await this.resources.update('prayer-requests', id, body) };
 	}
 
 	@Delete('prayer-requests/:id')
-	async withdrawPrayerRequest(@Param('id') id: string): Promise<Payload> {
+	async withdrawPrayerRequest(@Param('id') id: string, @Req() request: RequestUser): Promise<Payload> {
+		this.requireOwnerOrCounselor(await this.resources.get('prayer-requests', id), request);
 		await this.resources.remove('prayer-requests', id);
 		return { data: { id, deleted: true } };
 	}
@@ -343,6 +369,20 @@ export class ContentController {
 
 	private owner(request: RequestUser): string | null {
 		return request.user ? String(request.user.sub) : null;
+	}
+
+	private requireOwnerOrCounselor(prayer: Payload, request: RequestUser): void {
+		if (
+			prayer.owner_id === this.owner(request) ||
+			request.user?.roles?.some((role) => ['counselor', 'admin', 'super_admin'].includes(role))
+		)
+			return;
+		throw new ForbiddenException('You do not have access to this prayer request.');
+	}
+
+	private requireStaff(request: RequestUser): void {
+		if (request.user?.roles?.some((role) => ['counselor', 'admin', 'super_admin'].includes(role))) return;
+		throw new ForbiddenException('Counselor access is required.');
 	}
 
 	private limit(value?: string): number {
