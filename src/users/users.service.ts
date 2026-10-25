@@ -21,8 +21,8 @@ export class UsersService {
 		private common: CommonutilsService,
 	) {}
 
-	findAll(): Promise<User[]> {
-		return this.usersRepository.find();
+	async findAll(): Promise<Array<Omit<User, 'password'>>> {
+		return (await this.usersRepository.find()).map((user) => this.excludePassword(user));
 	}
 
 	findOne(id: number): Promise<User | null> {

@@ -9,6 +9,7 @@ import { User } from '../users/entities/user.entity';
 import { Session } from './entities/session.entity';
 
 type AuthenticatedUser = Omit<User, 'password'>;
+const ACCESS_TOKEN_TTL_SECONDS = 5 * 60 * 60;
 
 @Injectable()
 export class AuthService {
@@ -88,7 +89,7 @@ export class AuthService {
 		return {
 			access_token: await this.jwtService.signAsync(payload),
 			refresh_token: `${session.id}.${secret}`,
-			expires_in: 900,
+			expires_in: ACCESS_TOKEN_TTL_SECONDS,
 			token_type: 'Bearer',
 		};
 	}

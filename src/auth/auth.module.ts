@@ -19,7 +19,7 @@ import { Session } from './entities/session.entity';
 		JwtModule.register({
 			global: true,
 			secret: jwtConstants.secret,
-			signOptions: { expiresIn: '15m' },
+			signOptions: { expiresIn: '5h' },
 		}),
 		PassportModule,
 	],
