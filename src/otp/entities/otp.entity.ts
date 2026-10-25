@@ -11,6 +11,6 @@ export class Otp {
 	@Column({ type: 'integer' })
 	userid: number;
 
-	@CreateDateColumn({ type: 'timestamp' })
+	@CreateDateColumn({ type: 'timestamptz' })
 	created_at: Date;
 }

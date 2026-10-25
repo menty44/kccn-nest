@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CommonutilsService } from '../commonutils/commonutils.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
@@ -11,6 +11,8 @@ import { Otp } from '../otp/entities/otp.entity';
 
 @Injectable()
 export class UsersService {
+	private readonly logger = new Logger(UsersService.name);
+
 	constructor(
 		@InjectRepository(User)
 		private usersRepository: Repository<User>,
@@ -36,7 +38,6 @@ export class UsersService {
 	}
 
 	async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password'>> {
-		this.common.assertOtpDeliveryConfigured();
 		try {
 			const { user, otpCode } = await this.usersRepository.manager.transaction(async (manager) => {
 				const usersRepository = manager.getRepository(User);
@@ -77,7 +78,7 @@ export class UsersService {
 
 				return { user: this.excludePassword(user), otpCode };
 			});
-			await this.common.sendOtp(createUserDto.email, otpCode);
+			this.queueOtpDelivery(user.id, createUserDto.email, otpCode);
 			return user;
 		} catch (error) {
 			if (this.isUniqueConstraintViolation(error)) {
@@ -91,8 +92,11 @@ export class UsersService {
 		}
 	}
 
-	async requestVerificationOtp(email: string): Promise<{ status: 'sent' }> {
-		const user = await this.usersRepository.findOneBy({ email });
+	async requestVerificationOtp(email?: string, userid?: number): Promise<{ status: 'sent' }> {
+		const user =
+			email !== undefined
+				? await this.usersRepository.findOneBy({ email })
+				: await this.usersRepository.findOneBy({ id: userid });
 		if (!user) {
 			return { status: 'sent' };
 		}
@@ -103,6 +107,14 @@ export class UsersService {
 		await this.otpRepository.save(this.otpRepository.create({ userid: user.id, code }));
 		await this.common.sendOtp(user.email, code);
 		return { status: 'sent' };
+	}
+
+	private queueOtpDelivery(userId: number, email: string, code: string): void {
+		void this.common.sendOtp(email, code).catch((error: unknown) => {
+			const message = error instanceof Error ? error.message : 'Unknown email delivery error';
+			const stack = error instanceof Error ? error.stack : undefined;
+			this.logger.error(`Unable to send verification OTP for user ${userId}: ${message}`, stack);
+		});
 	}
 
 	private excludePassword(user: User): Omit<User, 'password'> {

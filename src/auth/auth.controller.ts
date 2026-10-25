@@ -1,5 +1,6 @@
 import {
 	Body,
+	BadRequestException,
 	Controller,
 	Get,
 	Headers,
@@ -74,6 +75,11 @@ export class AuthController {
 	@HttpCode(HttpStatus.OK)
 	@Post('otp/request')
 	requestOtp(@Body() requestOtpDto: RequestOtpDto) {
-		return this.usersService.requestVerificationOtp(requestOtpDto.email);
+		const hasEmail = requestOtpDto.email !== undefined;
+		const hasUserId = requestOtpDto.userid !== undefined;
+		if (hasEmail === hasUserId) {
+			throw new BadRequestException('Provide exactly one of email or userid.');
+		}
+		return this.usersService.requestVerificationOtp(requestOtpDto.email, requestOtpDto.userid);
 	}
 }
